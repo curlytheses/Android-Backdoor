@@ -9,22 +9,17 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
+
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 
 public class ParentalService extends Service {
 
     private final String TAG = "ParentalService";
 
-    private ActivityManager activityManager = null;
-
-    private static final ScheduledExecutorService worker = Executors
-            .newSingleThreadScheduledExecutor();
-
-    private SharedPreferences sPref = ParentalApplication
+    private final SharedPreferences sPref = ParentalApplication
             .getInstance()
             .getSharedPreferences();
 
@@ -39,6 +34,7 @@ public class ParentalService extends Service {
         public void onReceive(Context context, Intent intent) {
             String in = intent.getAction();
 
+            assert in != null;
             if (in.equals(ParentalApplication.STOP_TIMER)) {
 
                 lockAgain   = true;
@@ -90,8 +86,7 @@ public class ParentalService extends Service {
 
                 ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
-                @SuppressWarnings("deprecation")
-                String runApp = am.getRunningTasks(1).get(0).topActivity.getPackageName().toString();
+                String runApp = Objects.requireNonNull(am.getAppTasks().get(1).getTaskInfo().topActivity.getPackageName());
 
                 Log.d(TAG, "BEGIN ------------------------");
 
@@ -105,13 +100,11 @@ public class ParentalService extends Service {
 
                 for (String lockApp : apps_to_lock) {
 
-                    if (runApp.equals(lockApp) && lockAgain == true && !runApp.equals(excludeApp)) {
+                    if (runApp.equals(lockApp) && lockAgain && !runApp.equals(excludeApp)) {
 
                         Log.d(TAG, runApp + " - LOCKED");
 
-                        sPref.edit().putString("exclude", runApp).commit();
-
-                        //screenlock
+                        sPref.edit().putString("exclude", runApp).apply();
                         Intent intent = new Intent(ParentalService.this, LockScreenActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);

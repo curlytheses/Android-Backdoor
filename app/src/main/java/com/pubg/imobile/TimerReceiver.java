@@ -4,9 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
-
-import com.pubg.imobile.ParentalApplication;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,11 +11,9 @@ import java.util.concurrent.TimeUnit;
 
 public class TimerReceiver extends BroadcastReceiver {
 
-    private final String TAG = "TimerReceiver";
-
     private static final ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
 
-    private SharedPreferences sPref = ParentalApplication
+    private final SharedPreferences sPref = ParentalApplication
             .getInstance()
             .getSharedPreferences();
 

