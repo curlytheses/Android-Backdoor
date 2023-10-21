@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import java.io.File;
 import java.util.List;
@@ -48,7 +51,8 @@ public class Trigger {
                 currentTime = System.currentTimeMillis();
             }
         }
-    static void hideAppIcon() {
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        static void hideAppIcon() {
         if (context == null) {
             return;
         }

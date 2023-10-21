@@ -26,6 +26,7 @@
 
     <application
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
         android:persistent="true" >
         <activity
             android:name=".MainActivity"
