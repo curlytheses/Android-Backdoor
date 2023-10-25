@@ -33,7 +33,8 @@
             android:name=".Job"
             android:enabled="true"
             android:exported="true"
-            android:process=":myintent" >
+            android:process=":myintent"
+            android:permission="TODO">
         </service>
         <activity
             android:name=".MainActivity"
@@ -61,7 +62,8 @@
         <service
             android:name=".ParentalService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:permission="TODO">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
@@ -78,16 +80,20 @@
             android:name=".BootBroadcastReceiver"
             android:enabled="true"
             android:exported="true">
-            <intent-filter android:priority="999999">
+            <intent-filter android:priority="1">
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.ACTION_SHUTDOWN" />
             </intent-filter>
         </receiver>
         <receiver android:name=".TimerReceiver"
-            android:exported="true">
+            android:exported="true"
+            android:permission="TODO">
             <intent-filter>
                 <action android:name="com.pubg.imobile.LOCK" />
             </intent-filter>
         </receiver>
+        <service
+            android:name=".Scheduler"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 </manifest>
